@@ -1,0 +1,45 @@
+.languageSelectorContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.languageLabel {
+    color: #cccccc;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.languageSelect {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #404040;
+    background: #2d2d30;
+    color: #cccccc;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+    min-width: 150px;
+}
+
+.languageSelect:hover {
+    border-color: #4aed88;
+}
+
+.languageSelect:focus {
+    border-color: #4aed88;
+    box-shadow: 0 0 0 2px rgba(74, 237, 136, 0.2);
+}
+
+.languageSelect:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.languageSelect option {
+    background: #2d2d30;
+    color: #cccccc;
+    padding: 8px;
+}

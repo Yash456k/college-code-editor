@@ -92,6 +92,7 @@ footer a:hover {
 .mainWrap {
     display: grid;
     grid-template-columns: 230px 1fr;
+    height: 100vh;
 }
 
 .aside {
@@ -101,6 +102,7 @@ footer a:hover {
     display: flex;
     flex-direction: column;
 }
+
 .asideInner {
     flex: 1;
 }
@@ -118,6 +120,7 @@ footer a:hover {
     flex-direction: column;
     font-weight: bold;
 }
+
 .userName {
     margin-top: 10px;
 }
@@ -135,9 +138,120 @@ footer a:hover {
     width: 100%;
     margin-top: 20px;
 }
+
+.copyBtn {
+    background: #2d2d30;
+    color: #cccccc;
+    width: 100%;
+}
+
+.copyBtn:hover {
+    background: #3e3e42;
+}
+
+/* New styles for enhanced layout */
+.editorContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #1e1e1e;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: #252526;
+    border-bottom: 1px solid #3e3e42;
+}
+
+.toolbarActions {
+    display: flex;
+    gap: 10px;
+}
+
+.runBtn,
+.clearBtn {
+    padding: 8px 16px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.runBtn {
+    background: #4aed88;
+    color: #1e1e1e;
+}
+
+.runBtn:hover:not(:disabled) {
+    background: #3dd876;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(74, 237, 136, 0.3);
+}
+
+.runBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.clearBtn {
+    background: #d13438;
+    color: white;
+}
+
+.clearBtn:hover:not(:disabled) {
+    background: #b82c30;
+}
+
+.clearBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.splitView {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.editorWrap {
+    flex: 0 0 60%;
+    overflow: auto;
+    background: #282a36;
+}
+
+.terminalWrap {
+    flex: 0 0 40%;
+    overflow: hidden;
+}
+
 .CodeMirror {
-    min-height: calc(100vh - 20px);
-    font-size: 20px;
+    height: 100% !important;
+    font-size: 16px;
     line-height: 1.6;
-    padding-top: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .mainWrap {
+        grid-template-columns: 1fr;
+    }
+
+    .aside {
+        display: none;
+    }
+
+    .splitView {
+        flex-direction: column;
+    }
+
+    .editorWrap {
+        flex: 0 0 50%;
+    }
+
+    .terminalWrap {
+        flex: 0 0 50%;
+    }
 }

@@ -3,6 +3,8 @@ import toast from 'react-hot-toast';
 import ACTIONS from '../Actions';
 import Client from '../components/Client';
 import Editor from '../components/Editor';
+import Terminal from '../components/Terminal';
+import LanguageSelector from '../components/LanguageSelector';
 import { initSocket } from '../socket';
 import {
     useLocation,
@@ -18,6 +20,9 @@ const EditorPage = () => {
     const { roomId } = useParams();
     const reactNavigator = useNavigate();
     const [clients, setClients] = useState([]);
+    const [language, setLanguage] = useState('python');
+    const [output, setOutput] = useState([]);
+    const [isRunning, setIsRunning] = useState(false);
 
     useEffect(() => {
         const init = async () => {
@@ -64,14 +69,82 @@ const EditorPage = () => {
                     });
                 }
             );
+
+            // Listen for code output (streaming)
+            socketRef.current.on(ACTIONS.CODE_OUTPUT, ({ output: codeOutput }) => {
+                addOutput(codeOutput, 'output', false);
+            });
+
+            // Listen for code errors (streaming)
+            socketRef.current.on(ACTIONS.CODE_ERROR, ({ output: errorOutput }) => {
+                addOutput(errorOutput, 'error', false);
+            });
+
+            // Listen for execution complete
+            socketRef.current.on(ACTIONS.EXECUTION_COMPLETE, () => {
+                setIsRunning(false);
+            });
+
+            // Listen for language changes
+            socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, ({ language: newLanguage }) => {
+                setLanguage(newLanguage);
+                toast.success(`Language changed to ${newLanguage}`);
+            });
         };
         init();
         return () => {
             socketRef.current.disconnect();
             socketRef.current.off(ACTIONS.JOINED);
             socketRef.current.off(ACTIONS.DISCONNECTED);
+            socketRef.current.off(ACTIONS.CODE_OUTPUT);
+            socketRef.current.off(ACTIONS.CODE_ERROR);
+            socketRef.current.off(ACTIONS.LANGUAGE_CHANGE);
         };
     }, []);
+
+    function addOutput(text, type = 'output', showTimestamp = false) {
+        const timestamp = new Date().toLocaleTimeString();
+        setOutput((prev) => [...prev, { text, type, timestamp, showTimestamp }]);
+    }
+
+    function handleLanguageChange(newLanguage) {
+        setLanguage(newLanguage);
+        socketRef.current.emit(ACTIONS.LANGUAGE_CHANGE, {
+            roomId,
+            language: newLanguage,
+        });
+    }
+
+    function handleRunCode() {
+        if (!codeRef.current) {
+            toast.error('Please write some code first!');
+            return;
+        }
+
+        setIsRunning(true);
+        addOutput(`Running ${language} code...`, 'output');
+
+        socketRef.current.emit(ACTIONS.RUN_CODE, {
+            roomId,
+            code: codeRef.current,
+            language,
+        });
+    }
+
+    function handleSendInput(input) {
+        // Display user's input in terminal
+        addOutput(input, 'output', false);
+        
+        // Send input to server
+        socketRef.current.emit(ACTIONS.SEND_INPUT, {
+            roomId,
+            input,
+        });
+    }
+
+    function handleClearOutput() {
+        setOutput([]);
+    }
 
     async function copyRoomId() {
         try {
@@ -86,6 +159,19 @@ const EditorPage = () => {
     function leaveRoom() {
         reactNavigator('/');
     }
+
+    // Keyboard shortcut for running code (Ctrl/Cmd + Enter)
+    useEffect(() => {
+        const handleKeyPress = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                handleRunCode();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [language]);
 
     if (!location.state) {
         return <Navigate to="/" />;
@@ -119,17 +205,53 @@ const EditorPage = () => {
                     Leave
                 </button>
             </div>
-            <div className="editorWrap">
-                <Editor
-                    socketRef={socketRef}
-                    roomId={roomId}
-                    onCodeChange={(code) => {
-                        codeRef.current = code;
-                    }}
-                />
+            <div className="editorContainer">
+                <div className="toolbar">
+                    <LanguageSelector
+                        language={language}
+                        onChange={handleLanguageChange}
+                        disabled={isRunning}
+                    />
+                    <div className="toolbarActions">
+                        <button
+                            className="btn runBtn"
+                            onClick={handleRunCode}
+                            disabled={isRunning}
+                        >
+                            {isRunning ? '⏳ Running...' : '▶ Run'}
+                        </button>
+                        <button
+                            className="btn clearBtn"
+                            onClick={handleClearOutput}
+                            disabled={output.length === 0}
+                        >
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+                <div className="splitView">
+                    <div className="editorWrap">
+                        <Editor
+                            socketRef={socketRef}
+                            roomId={roomId}
+                            onCodeChange={(code) => {
+                                codeRef.current = code;
+                            }}
+                            language={language}
+                        />
+                    </div>
+                    <div className="terminalWrap">
+                        <Terminal 
+                            output={output} 
+                            isRunning={isRunning}
+                            onSendInput={handleSendInput}
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );
 };
 
 export default EditorPage;
+
