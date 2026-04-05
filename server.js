@@ -11,6 +11,7 @@ const os = require('os');
 const allowedOrigins = [
     'http://localhost:3000',
     'https://college-code-editor.vercel.app',
+    'https://college-code-editor.onrender.com',
 ];
 
 const server = http.createServer(app);
