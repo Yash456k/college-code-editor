@@ -8,13 +8,23 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://college-code-editor.vercel.app',
+];
+
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:3000",
-        methods: ["GET", "POST"],
+        origin(origin, callback) {
+            if (!origin || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error(`Origin ${origin} not allowed by CORS`));
+        },
+        methods: ['GET', 'POST'],
         credentials: true
-    }
+    },
 });
 
 app.use(express.static('build'));
